@@ -101,7 +101,7 @@ export class HtmlNode {
     return this.attrs[attribute] || null;
   }
 
-  public getTextContent(separator = '', recursive = true): string {
+  public getTextContent(separator = '\t', recursive = true): string {
     const chunks: string[] = [];
     this._getTextContent(recursive, chunks);
     return chunks.join(separator);
