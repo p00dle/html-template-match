@@ -4,10 +4,15 @@ export interface TemplateProp {
   prop: string;
 }
 
+export interface TemplateTextProp extends TemplateProp {
+  textType: 'prop' | 'const';
+  text: string;
+}
+
 export type TemplateNode = {
   selector: string;
   attributes: Record<string, TemplateProp>;
-  textContent: TemplateProp | null;
+  textContent: TemplateTextProp[];
   subQueryProp: string | null;
   subQuery: TemplateNode | null;
   children: TemplateNode[];
@@ -17,7 +22,7 @@ export function makeTemplateNode(): TemplateNode {
   return {
     selector: '',
     attributes: {},
-    textContent: null,
+    textContent: [],
     subQueryProp: null,
     subQuery: null,
     children: [],

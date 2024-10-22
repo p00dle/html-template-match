@@ -33,26 +33,27 @@ export class HtmlNode {
     }
   }
 
-  public select(selector: string): HtmlNode | null {
+  public select(selector: string, matchItself = true): HtmlNode | null {
     const selectors = parseSelector(selector);
     const nodes: HtmlNode[] = [];
     this._select(selectors, true, nodes, 0);
-    return nodes[0] || null;
+    const filteredNodes = matchItself ? nodes : nodes.filter((node) => node !== this);
+    return filteredNodes[0] || null;
   }
 
-  public selectOrThrow(selector: string): HtmlNode {
-    const node = this.select(selector);
+  public selectOrThrow(selector: string, matchItself = true): HtmlNode {
+    const node = this.select(selector, matchItself);
     if (node) {
       return node;
     }
     throw new Error(`Unable to find element for selector "${selector}"`);
   }
 
-  public selectAll(selector: string): HtmlNode[] {
+  public selectAll(selector: string, matchItself = true): HtmlNode[] {
     const selectors = parseSelector(selector);
     const nodes: HtmlNode[] = [];
     this._select(selectors, false, nodes, 0);
-    return nodes;
+    return matchItself ? nodes : nodes.filter((node) => node !== this);
   }
 
   private _select(selectors: Selector[][], returnEarly: boolean, matchedNodes: HtmlNode[], depth: number): boolean {

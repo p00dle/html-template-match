@@ -7,7 +7,7 @@ describe('TemplateParser', () => {
     selector: 'div',
     attributes: {},
     children: [],
-    textContent: null,
+    textContent: [],
     subQuery: null,
     subQueryProp: null,
   };
@@ -24,7 +24,7 @@ describe('TemplateParser', () => {
       selector: 'div',
       attributes: { attr: { prop: 'foo', nullable: false, type: 'string' } },
       children: [],
-      textContent: null,
+      textContent: [],
       subQuery: null,
       subQueryProp: null,
     };
@@ -36,7 +36,7 @@ describe('TemplateParser', () => {
       selector: 'div',
       attributes: {},
       children: [],
-      textContent: { prop: 'foo', nullable: false, type: 'string' },
+      textContent: [{ prop: 'foo', nullable: false, type: 'string', text: '', textType: 'prop' }],
       subQuery: null,
       subQueryProp: null,
     };
@@ -53,19 +53,19 @@ describe('TemplateParser', () => {
     };
     expect(new TemplateParser('<div>{foo:string}</div>').parse()).toEqual({
       ...node,
-      textContent: { prop: 'foo', nullable: false, type: 'string' },
+      textContent: [{ prop: 'foo', nullable: false, type: 'string', text: '', textType: 'prop' }],
     });
     expect(new TemplateParser('<div>{foo?:string}</div>').parse()).toEqual({
       ...node,
-      textContent: { prop: 'foo', nullable: true, type: 'string' },
+      textContent: [{ prop: 'foo', nullable: true, type: 'string', text: '', textType: 'prop' }],
     });
     expect(new TemplateParser('<div>{foo:number}</div>').parse()).toEqual({
       ...node,
-      textContent: { prop: 'foo', nullable: false, type: 'number' },
+      textContent: [{ prop: 'foo', nullable: false, type: 'number', text: '', textType: 'prop' }],
     });
     expect(new TemplateParser('<div>{foo?:number}</div>').parse()).toEqual({
       ...node,
-      textContent: { prop: 'foo', nullable: true, type: 'number' },
+      textContent: [{ prop: 'foo', nullable: true, type: 'number', text: '', textType: 'prop' }],
     });
   });
   it('throws on invalid prop type', () => {

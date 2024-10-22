@@ -53,20 +53,68 @@ export class TemplateParser {
     }
 
     const nextOpenTagIndex = this.text.indexOf('<', this.index);
-    const openBracesIndex = this.text.indexOf('{', this.index);
-    if (openBracesIndex > 0 && openBracesIndex < nextOpenTagIndex) {
-      const isDoubleBraces = this.text[openBracesIndex + 1] === '{';
-      const closeBracesIndex = this.text.indexOf(isDoubleBraces ? '}}' : '}', openBracesIndex);
-      if (isDoubleBraces) {
-        const colonIndex = this.text.indexOf(':', openBracesIndex);
-        (this.currentNode as TemplateNode).subQueryProp = this.text.slice(openBracesIndex + 2, colonIndex);
-        (this.currentNode as TemplateNode).subQuery = new TemplateParser(this.text.slice(colonIndex + 1, closeBracesIndex)).parse();
-        this.index = closeBracesIndex + 2;
-      } else {
-        (this.currentNode as TemplateNode).textContent = parseTemplateProp(this.text.slice(openBracesIndex + 1, closeBracesIndex));
-      }
+    const openDoubleBracesIndex = this.text.indexOf('{{', this.index);
+    if (openDoubleBracesIndex > 0 && openDoubleBracesIndex < nextOpenTagIndex) {
+      const closeBracesIndex = this.text.indexOf('}}', openDoubleBracesIndex);
+      const colonIndex = this.text.indexOf(':', openDoubleBracesIndex);
+      (this.currentNode as TemplateNode).subQueryProp = this.text.slice(openDoubleBracesIndex + 2, colonIndex);
+      (this.currentNode as TemplateNode).subQuery = new TemplateParser(this.text.slice(colonIndex + 1, closeBracesIndex)).parse();
+      this.index = closeBracesIndex + 2;
+    } else {
+      this.parseTextContent(this.index, nextOpenTagIndex);
+      // this.index = nextOpenTagIndex;
     }
     this.next();
+  }
+
+  private parseTextContent(startIndex: number, endIndex: number) {
+    const text = this.text.slice(startIndex, endIndex).trim();
+    let index = 0;
+    if (text === '') return;
+    if (/{/.test(text)) {
+      while (true) {
+        const openBracesIndex = text.indexOf('{', index);
+        if (openBracesIndex === -1) {
+          const subText = text.slice(index).trim();
+          if (subText !== '') {
+            this.currentNode?.textContent.push({
+              type: 'string',
+              nullable: false,
+              prop: '',
+              textType: 'const',
+              text: subText,
+            });
+          }
+          break;
+        }
+        const subText = text.slice(index, openBracesIndex).trim();
+        if (subText !== '') {
+          this.currentNode?.textContent.push({
+            type: 'string',
+            nullable: false,
+            prop: '',
+            textType: 'const',
+            text: subText,
+          });
+        }
+        const closeBracesIndex = text.indexOf('}', openBracesIndex);
+        if (closeBracesIndex === -1) throw new Error('Unclosed braces in template');
+        this.currentNode?.textContent.push({
+          ...parseTemplateProp(text.slice(openBracesIndex + 1, closeBracesIndex)),
+          textType: 'prop',
+          text: '',
+        });
+        index = closeBracesIndex + 1;
+      }
+    } else {
+      this.currentNode?.textContent.push({
+        type: 'string',
+        nullable: false,
+        prop: '',
+        textType: 'const',
+        text,
+      });
+    }
   }
 
   private parseAttributes(startIndex: number, endIndex: number): boolean {

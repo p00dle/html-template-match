@@ -7,7 +7,11 @@
     "lineEnding": "lf"
   },
   "linter": {
-    "rules": {}
+    "rules": {
+      "suspicious": {
+        "noConsoleLog": "error"
+      }
+    }
   },
   "organizeImports": {
     "enabled": false
