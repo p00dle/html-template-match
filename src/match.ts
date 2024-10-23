@@ -90,7 +90,7 @@ function parseValue(prop: TemplateProp, text: string | null | undefined) {
     case 'string':
       return trimmed;
     case 'number': {
-      const parsed = Number.parseFloat(trimmed);
+      const parsed = Number.parseFloat(trimmed.replace(/\t/g, ''));
       return Number.isNaN(parsed) ? INVALID_TYPE : parsed;
     }
     default:
@@ -136,7 +136,7 @@ function makeTextContentRegex(props: TemplateTextProp[]): RegExp {
 }
 
 function escapeRegex(str: string): string {
-  return str.replace(/[.$^*+()]/g, (c) => `\\${c}`);
+  return str.replace(/[.$^*+()/]/g, (c) => `\\${c}`);
 }
 
 function selectMatchWithLargestDepthSum<T>(matches: MatchMetadata[]): MatchMetadata {
