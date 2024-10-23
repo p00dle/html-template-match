@@ -14,19 +14,17 @@ function matchOne(
   depthSum: number,
 ): number {
   let childrenDepthSum = 0;
-  // if (htmlNode.classes.includes('test')) console.log('matching bob against template', templateNode);
-
   if (templateNode.textContent.length === 1) {
     const textProp = templateNode.textContent[0];
     if (textProp.textType === 'prop') {
-      const value = parseValue(textProp, htmlNode.textContent);
+      const value = parseValue(textProp, htmlNode.getTextContent());
       if (value === INVALID_TYPE) return -1;
       output[textProp.prop] = value;
     } else {
-      if (!(htmlNode.textContent || '').includes(textProp.text)) return -1;
+      if (!htmlNode.getTextContent().includes(textProp.text)) return -1;
     }
   } else if (templateNode.textContent.length > 1) {
-    const text = htmlNode.textContent || '';
+    const text = htmlNode.getTextContent();
     const regex = makeTextContentRegex(templateNode.textContent);
     const match = text.match(regex);
     if (!match) return -1;
@@ -37,23 +35,18 @@ function matchOne(
       output[props[i].prop] = value;
     }
   }
-  // if (htmlNode.classes.includes('test')) console.log('bob passed textContent check');
   for (const [attr, prop] of Object.entries(templateNode.attributes)) {
     const value = parseValue(prop, htmlNode.getAttribute(attr));
     if (value === INVALID_TYPE) return -1;
     output[prop.prop] = value;
   }
-  // if (htmlNode.classes.includes('test')) console.log('bob passed attribute check');
   if (templateNode.subQueryProp && templateNode.subQuery) {
     output[templateNode.subQueryProp] = matchMany(htmlNode, templateNode.subQuery, allMatchNodes, false, depthSum).map(
       ({ output }) => output,
     );
   }
-  // let i = 0;
   for (const child of templateNode.children) {
-    // if (htmlNode.classes.includes('test')) console.log(`bob passed ${i++} children`);
     const childMatches = matchMany(htmlNode, child, allMatchNodes, false, depthSum);
-    // if (htmlNode.classes.includes('test')) console.log(childMatches);
     if (childMatches.length === 0) return -1;
     const matchMetadata = selectMatchWithLargestDepthSum(childMatches);
     for (const [key, value] of Object.entries(matchMetadata.output)) {
@@ -78,34 +71,12 @@ function matchMany(
   depthSum: number,
 ): MatchMetadata[] {
   const matches: MatchMetadata[] = [];
-  // if (htmlNode.classes.includes('test')) console.log('checking children for bob', templateNode);
-  // if (htmlNode.classes.includes('test')) console.log(allMatchNodes.keys());
   for (const matchedNode of htmlNode.selectAll(templateNode.selector, matchItself).filter((node) => !allMatchNodes.has(node))) {
-    // if (htmlNode.classes.includes('test')) console.log('checking children for bob');
-    // if (matchItself && matchedNode.classes.includes('test')) {
-    //   console.log('bob is evaluated for top position; allMatchNodes should be empty', allMatchNodes.keys());
-    // }
     const output: Record<string, unknown> = {};
     const candidateMatchNodes = copyMap(allMatchNodes);
     const matchDepthSum = matchOne(matchedNode, templateNode, output, candidateMatchNodes, depthSum + matchedNode.depth);
     if (matchDepthSum !== -1) matches.push({ depthSum: matchDepthSum, output, allMatchedNodes: candidateMatchNodes, matchedNode });
   }
-  // console.log('HTML NODE');
-  // console.log(JSON.stringify(htmlNode, null, 2));
-  // console.log('TEMPLATE NODE');
-  // console.log(
-  //   JSON.stringify(
-  //     {
-  //       selector: templateNode.selector,
-  //       attributes: templateNode.attributes,
-  //       textContent: templateNode.textContent,
-  //     },
-  //     null,
-  //     2,
-  //   ),
-  // );
-  // console.log('MATCHES');
-  // console.log(JSON.stringify(filterParents(matches), null, 2));
   return filterParents(matches);
 }
 
