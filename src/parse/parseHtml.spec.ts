@@ -1,12 +1,12 @@
 import { describe, test, expect } from 'vitest';
 import { parseHtml } from './parseHtml';
-import { HtmlNode, stubError } from './HtmlNode';
+import { HtmlNode } from './HtmlNode';
 
 describe('parseHtml', () => {
   test('parses valid html', () => {
     const node = parseHtml(validHtml);
     expect(node).toBeInstanceOf(HtmlNode);
-    expect(node.error).toBe(stubError);
+    expect(node.error).toBe(null);
   });
   test('gets all node properties', () => {
     const node = parseHtml(validHtml);
@@ -41,6 +41,13 @@ describe('parseHtml', () => {
     const node = parseHtml(validHtml, { skipNodeTypes: ['script', 'style'] });
     expect(node.select('script')).toBe(null);
     expect(node.select('style')).toBe(null);
+  });
+  test('correctly assigns depth to elements', () => {
+    const node = parseHtml(validHtml, { skipNodeTypes: ['script', 'style'] });
+    expect(node.depth).toBe(0);
+    expect(node.select('head')?.depth).toBe(1);
+    expect(node.select('meta')?.depth).toBe(2);
+    expect(node.select('span')?.depth).toBe(3);
   });
 });
 

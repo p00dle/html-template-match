@@ -177,7 +177,8 @@ export class HtmlParser {
   private enterNode() {
     this.currentNodeIndex = this.nodes.length;
     const parentIndex = hasElements(this.parents) ? this.parents[this.parents.length - 1] : null;
-    const node = new ParserNode(this.currentTag, this.currentNodeIndex, parentIndex, this.nodes);
+    const parentDepth = parentIndex === null ? -1 : this.nodes[parentIndex].depth;
+    const node = new ParserNode(this.currentTag, this.currentNodeIndex, parentDepth + 1, parentIndex, this.nodes);
     this.currentNode = node;
     this.nodes.push(node);
     this.parents.push(this.currentNodeIndex);

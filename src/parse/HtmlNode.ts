@@ -2,8 +2,6 @@ import { stubParserNode, type ParserNode } from './ParserNode';
 import { parseSelector } from './parseSelector';
 import type { Selector } from './Selector';
 
-export const stubError = new Error('');
-
 export class HtmlNode {
   private children: number[];
   public classes: string[];
@@ -11,9 +9,10 @@ export class HtmlNode {
   public attrs: Record<string, string>;
   public id: string | null;
   public tag: string;
+  public depth: number;
   public textContent: string | null;
   public isError = false;
-  public error: Error = stubError;
+  public error: Error | null = null;
 
   constructor(
     parserNode: ParserNode,
@@ -23,6 +22,7 @@ export class HtmlNode {
     this.children = parserNode.children;
     this.classes = parserNode.classes;
     this.attrs = parserNode.attrs;
+    this.depth = parserNode.depth;
     this.id = parserNode.id;
     this.tag = parserNode.tag;
     this.parent = parserNode.parent;
@@ -54,6 +54,10 @@ export class HtmlNode {
     const nodes: HtmlNode[] = [];
     this._select(selectors, false, nodes, 0);
     return matchItself ? nodes : nodes.filter((node) => node !== this);
+  }
+
+  public getParent(): HtmlNode | null {
+    return this.parent === null ? null : this.allNodes[this.parent];
   }
 
   private _select(selectors: Selector[][], returnEarly: boolean, matchedNodes: HtmlNode[], depth: number): boolean {
@@ -121,6 +125,7 @@ export class HtmlNode {
     return {
       tag: this.tag,
       id: this.id,
+      depth: this.depth,
       classes: this.classes,
       attrs: this.attrs,
       textContent: this.textContent,
@@ -131,6 +136,7 @@ export class HtmlNode {
 interface Node {
   children: Node[];
   classes: string[];
+  depth: number;
   attrs: Record<string, string>;
   id: string | null;
   tag: string;

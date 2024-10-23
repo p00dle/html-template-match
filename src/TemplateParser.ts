@@ -1,16 +1,7 @@
 import { makeTemplateNode, type TemplateProp, type TemplateNode } from './TemplateNode';
-/*
-  <li>
-    <div> 
-      <a>{dataGb}</a>
-    </div>
-    <ul>
-      props:{{
-        <li>{prop}</li>
-      }}
-    </ul>
-  </li>
-*/
+
+// TODO: does not throw on tag not closed
+
 export class TemplateParser {
   private index = 0;
   private parentNodes: TemplateNode[] = [];

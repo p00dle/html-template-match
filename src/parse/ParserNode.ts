@@ -10,6 +10,7 @@ export class ParserNode {
   constructor(
     public tag: string,
     public index: number,
+    public depth: number,
     public parent: number | null,
     public allNodesRef: ParserNode[],
   ) {
@@ -49,4 +50,4 @@ export class ParserNode {
   }
 }
 
-export const stubParserNode = new ParserNode('', 0, null, []);
+export const stubParserNode = new ParserNode('', 0, 0, null, []);
