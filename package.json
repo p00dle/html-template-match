@@ -1,6 +1,6 @@
 {
   "name": "html-match-template",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "",
   "keywords": [],
   "author": "",
@@ -8,6 +8,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.7.6",
+    "@vitest/coverage-v8": "2.1.3",
     "rimraf": "^6.0.1",
     "typescript": "^5.6.3",
     "vitest": "^2.1.3"

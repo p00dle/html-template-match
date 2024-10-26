@@ -1,5 +1,3 @@
-import { getLast, hasElements } from './lib';
-
 export class ParserNode {
   public children: number[] = [];
   public classes: string[] = [];
@@ -21,10 +19,6 @@ export class ParserNode {
 
   public addChild(nodeIndex: number) {
     this.children.push(nodeIndex);
-  }
-
-  public addClass(className: string) {
-    this.classes.push(className);
   }
 
   public addAttr(attr: string, value: string, nodes: ParserNode[]) {

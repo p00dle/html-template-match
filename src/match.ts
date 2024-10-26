@@ -47,16 +47,22 @@ function matchOne(
   }
   for (const child of templateNode.children) {
     const childMatches = matchMany(htmlNode, child, allMatchNodes, false, depthSum);
-    if (childMatches.length === 0) return -1;
-    const matchMetadata = selectMatchWithLargestDepthSum(childMatches);
-    for (const [key, value] of Object.entries(matchMetadata.output)) {
-      output[key] = value;
+    if (childMatches.length === 0) {
+      if (!child.isOptional) {
+        return -1;
+      }
+      populateWithNullProps(output, child);
+    } else {
+      const matchMetadata = selectMatchWithLargestDepthSum(childMatches);
+      for (const [key, value] of Object.entries(matchMetadata.output)) {
+        output[key] = value;
+      }
+      allMatchNodes.set(matchMetadata.matchedNode, true);
+      for (const [key, value] of matchMetadata.allMatchedNodes.entries()) {
+        allMatchNodes.set(key, value);
+      }
+      childrenDepthSum += matchMetadata.depthSum;
     }
-    allMatchNodes.set(matchMetadata.matchedNode, true);
-    for (const [key, value] of matchMetadata.allMatchedNodes.entries()) {
-      allMatchNodes.set(key, value);
-    }
-    childrenDepthSum += matchMetadata.depthSum;
   }
 
   allMatchNodes.set(htmlNode, true);
@@ -93,6 +99,7 @@ function parseValue(prop: TemplateProp, text: string | null | undefined) {
       const parsed = Number.parseFloat(trimmed.replace(/\t/g, ''));
       return Number.isNaN(parsed) ? INVALID_TYPE : parsed;
     }
+    /* v8 ignore next 2 */
     default:
       throw new Error('Invalid property type');
   }
@@ -146,8 +153,9 @@ function selectMatchWithLargestDepthSum<T>(matches: MatchMetadata[]): MatchMetad
   }
   for (const match of matches) {
     if (match.depthSum === maxDepthSum) return match;
+    /* v8 ignore next 3 - this will never happen but added to make ts happy */
   }
-  return matches[0]; // this will never happen
+  return matches[0];
 }
 
 interface MatchMetadata<T = Record<string, unknown>> {
@@ -176,4 +184,17 @@ function isParent(node1: HtmlNode, node2: HtmlNode): boolean {
     node = node.getParent();
   }
   return false;
+}
+
+function populateWithNullProps(output: Record<string, unknown>, node: TemplateNode) {
+  const textContentProps = node.textContent.filter((prop) => prop.textType === 'prop');
+  for (const prop of textContentProps) {
+    output[prop.prop] = null;
+  }
+  for (const prop of Object.values(node.attributes)) {
+    output[prop.prop] = null;
+  }
+  for (const child of node.children) {
+    populateWithNullProps(output, child);
+  }
 }

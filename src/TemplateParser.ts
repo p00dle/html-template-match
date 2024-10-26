@@ -1,4 +1,4 @@
-import { makeTemplateNode, type TemplateProp, type TemplateNode } from './TemplateNode';
+import { makeTemplateNode, type TemplateProp, type TemplateNode, type TemplateTextProp } from './TemplateNode';
 
 // TODO: does not throw on tag not closed
 
@@ -8,6 +8,7 @@ export class TemplateParser {
   private rootNode: TemplateNode | null = null;
   private currentNode: TemplateNode | null = null;
   private text: string;
+  private isParentOptional = false;
 
   constructor(template: string) {
     this.text = template;
@@ -22,23 +23,28 @@ export class TemplateParser {
     const openTagIndex = this.text.indexOf('<', this.index);
     if (openTagIndex === -1) return;
     const isClosingTag = this.text[openTagIndex + 1] === '/';
+    const isOptional = this.text[openTagIndex + 1] === '?';
     const closeTagIndex = this.text.indexOf('>', openTagIndex);
     this.index = closeTagIndex + 1;
     if (isClosingTag) {
       this.currentNode = this.parentNodes.pop() as TemplateNode;
+      this.isParentOptional = this.parentNodes.some((node) => node.isOptional);
       this.next();
       return;
     }
+    if (!this.isParentOptional && isOptional) this.isParentOptional = true;
     if (this.currentNode) {
       const parentNode = this.currentNode;
       this.parentNodes.push(parentNode);
       this.currentNode = makeTemplateNode();
       parentNode.children.push(this.currentNode);
     } else {
+      if (isOptional) throw new Error('Root element must not be optional');
       this.currentNode = makeTemplateNode();
       this.rootNode = this.currentNode;
     }
-    const isSelfClosed = this.parseAttributes(openTagIndex + 1, closeTagIndex);
+    this.currentNode.isOptional = isOptional;
+    const isSelfClosed = this.parseAttributes(openTagIndex + 1 + (isOptional ? 1 : 0), closeTagIndex);
     if (isSelfClosed) {
       this.currentNode = this.parentNodes.pop() || null;
     }
@@ -53,7 +59,6 @@ export class TemplateParser {
       this.index = closeBracesIndex + 2;
     } else {
       this.parseTextContent(this.index, nextOpenTagIndex);
-      // this.index = nextOpenTagIndex;
     }
     this.next();
   }
@@ -90,11 +95,13 @@ export class TemplateParser {
         }
         const closeBracesIndex = text.indexOf('}', openBracesIndex);
         if (closeBracesIndex === -1) throw new Error('Unclosed braces in template');
-        this.currentNode?.textContent.push({
+        const prop: TemplateTextProp = {
           ...parseTemplateProp(text.slice(openBracesIndex + 1, closeBracesIndex)),
           textType: 'prop',
           text: '',
-        });
+        };
+        if (!prop.nullable && this.isParentOptional) throw new Error('All props within an optional element must be nullable');
+        this.currentNode?.textContent.push(prop);
         index = closeBracesIndex + 1;
       }
     } else {
@@ -119,8 +126,12 @@ export class TemplateParser {
       .filter((str) => str !== '');
     for (const attributeText of attributesText) {
       const [attr, prop] = attributeText.split('=');
-      if (prop[0] !== '{' || prop[prop.length - 1] !== '}') continue;
-      (this.currentNode as TemplateNode).attributes[attr] = parseTemplateProp(prop.slice(1, prop.length - 1));
+      if (prop[0] === '{') {
+        if (prop[prop.length - 1] !== '}') throw new Error('Unclosed braces in template');
+        (this.currentNode as TemplateNode).attributes[attr] = parseTemplateProp(prop.slice(1, prop.length - 1));
+      } else {
+        (this.currentNode as TemplateNode).selector += `[${attributeText}]`;
+      }
     }
     return isSelfClosed;
   }

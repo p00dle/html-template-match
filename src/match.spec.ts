@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { matchHtml, matchHtmlAll } from './match';
+import { matchHtml, matchHtmlAll } from './index';
 
 describe('matchHtml', () => {
   it('matches single element text content and attributes', () => {
@@ -105,6 +105,59 @@ describe('matchHtml', () => {
       </div>
       `),
     ).toEqual({ depth: 2 });
+  });
+  it('matches a template with optional elements', () => {
+    const match = matchHtml(`
+      <section>
+        <div> {price:number} $ </div>
+        <?div> {discountPrice?:number} $ </div>
+      </section>
+      `);
+    expect(
+      match(`
+      <section>
+        <div> 10$ </div>
+      </section>
+      `),
+    ).toEqual({ price: 10, discountPrice: null });
+    expect(
+      match(`
+      <section>
+        <div> 10$ </div>
+        <div> 5$ </div>
+      </section>
+      `),
+    ).toEqual({ price: 10, discountPrice: 5 });
+  });
+  it('does not match when text content value is not of the right type', () => {
+    const match = matchHtml('<div>{foo:number}</div>');
+    expect(() => match('<div>A</div>')).toThrow();
+  });
+  it('does not match when text content value is not of the right type when constant text content is present', () => {
+    const match = matchHtml('<div>{foo:number} $ </div>');
+    expect(() => match('<div>A $</div>')).toThrow();
+  });
+  it('does not match when text content value is not not nullable and node text content is only whitespace', () => {
+    const match = matchHtml('<div>{foo}</div>');
+    expect(() => match('<div>     </div>')).toThrow();
+  });
+  it('starts at specified root node when provided and throws when not found', () => {
+    const match = matchHtml('<a href={href} />', 'span');
+    expect(
+      match(`
+      <div>
+        <a href=bar ></a>
+        <span>
+          <a href=foo ></a>
+        </span>
+      </div>
+      `),
+    ).toEqual({ href: 'foo' });
+    expect(() => match('<div><a href=foo></a></div>')).toThrow();
+  });
+  it('populates with null values when optional element is not found', () => {
+    const match = matchHtml('<div><span>{foo}</span><?section id={id?}><div>{text?}</</section></div>');
+    expect(match('<div><span>foo</span></div>')).toEqual({ foo: 'foo', id: null, text: null });
   });
 });
 

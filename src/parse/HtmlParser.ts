@@ -47,6 +47,7 @@ export class HtmlParser {
     }
     if (this.htmlNodes.length > 0) {
       return this.htmlNodes[0];
+      /* v8 ignore next 3 - this should never happen but added just in case */
     }
     return makeErrorHtmlNode('Unknown error');
   }
@@ -91,7 +92,7 @@ export class HtmlParser {
     this.index = textEndIndex + endTag.length;
     return true;
   }
-
+  /* v8 ignore start */
   private logIndex(message?: string) {
     const WIDTH = 80;
     const HALF_WIDTH = Math.floor(WIDTH / 2);
@@ -121,6 +122,7 @@ export class HtmlParser {
     console.debug(this.html.slice(startIndex, endIndex));
     console.debug('^'.padStart(this.index - startIndex + 1, ' '));
   }
+  /* v8 ignore end */
 
   private moveCursorToNextTag(): boolean {
     let startIndex = this.index;

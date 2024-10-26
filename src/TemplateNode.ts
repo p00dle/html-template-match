@@ -11,6 +11,7 @@ export interface TemplateTextProp extends TemplateProp {
 
 export type TemplateNode = {
   selector: string;
+  isOptional: boolean;
   attributes: Record<string, TemplateProp>;
   textContent: TemplateTextProp[];
   subQueryProp: string | null;
@@ -21,6 +22,7 @@ export type TemplateNode = {
 export function makeTemplateNode(): TemplateNode {
   return {
     selector: '',
+    isOptional: false,
     attributes: {},
     textContent: [],
     subQueryProp: null,
