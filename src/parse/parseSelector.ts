@@ -16,7 +16,9 @@ function unquote(str: string): string {
   return str;
 }
 
+const cache: Record<string, Selector[][]> = {};
 export function parseSelector(selectorString: string): Selector[][] {
+  if (cache[selectorString]) return cache[selectorString];
   const str = selectorString.trim();
   const selectors: Selector[][] = [[]];
   let depth = 0;
@@ -76,5 +78,6 @@ export function parseSelector(selectorString: string): Selector[][] {
       }
     }
   }
+  cache[selectorString] = selectors;
   return selectors;
 }

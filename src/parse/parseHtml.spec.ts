@@ -49,6 +49,9 @@ describe('parseHtml', () => {
     expect(node.select('meta')?.depth).toBe(2);
     expect(node.select('span')?.depth).toBe(3);
   });
+  // test('throws on invalid HTML', () => {
+  //   expect(parseHtml('<div>').error).not.toBe(null);
+  // });
 });
 
 const validHtml = `

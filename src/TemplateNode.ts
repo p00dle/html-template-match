@@ -11,6 +11,7 @@ export interface TemplateTextProp extends TemplateProp {
 
 export type TemplateNode = {
   selector: string;
+  isDirectChild: boolean;
   isOptional: boolean;
   attributes: Record<string, TemplateProp>;
   textContent: TemplateTextProp[];
@@ -22,6 +23,7 @@ export type TemplateNode = {
 export function makeTemplateNode(): TemplateNode {
   return {
     selector: '',
+    isDirectChild: false,
     isOptional: false,
     attributes: {},
     textContent: [],

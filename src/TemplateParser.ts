@@ -23,7 +23,8 @@ export class TemplateParser {
     const openTagIndex = this.text.indexOf('<', this.index);
     if (openTagIndex === -1) return;
     const isClosingTag = this.text[openTagIndex + 1] === '/';
-    const isOptional = this.text[openTagIndex + 1] === '?';
+    const isOptional = this.text[openTagIndex + 1] === '?' || this.text[openTagIndex + 2] === '?';
+    const isDirectChild = this.text[openTagIndex + 1] === '!' || this.text[openTagIndex + 2] === '!';
     const closeTagIndex = this.text.indexOf('>', openTagIndex);
     this.index = closeTagIndex + 1;
     if (isClosingTag) {
@@ -40,11 +41,13 @@ export class TemplateParser {
       parentNode.children.push(this.currentNode);
     } else {
       if (isOptional) throw new Error('Root element must not be optional');
+      if (isDirectChild) throw new Error('Root element must not be a direct child');
       this.currentNode = makeTemplateNode();
       this.rootNode = this.currentNode;
     }
     this.currentNode.isOptional = isOptional;
-    const isSelfClosed = this.parseAttributes(openTagIndex + 1 + (isOptional ? 1 : 0), closeTagIndex);
+    this.currentNode.isDirectChild = isDirectChild;
+    const isSelfClosed = this.parseAttributes(openTagIndex + 1 + (isOptional ? 1 : 0) + (isDirectChild ? 1 : 0), closeTagIndex);
     if (isSelfClosed) {
       this.currentNode = this.parentNodes.pop() || null;
     }

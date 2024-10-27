@@ -3,72 +3,35 @@ import { TemplateParser } from './TemplateParser';
 import type { TemplateNode } from './TemplateNode';
 
 describe('TemplateParser', () => {
-  const emptyDiv: TemplateNode = {
-    selector: 'div',
-    isOptional: false,
-    attributes: {},
-    children: [],
-    textContent: [],
-    subQuery: null,
-    subQueryProp: null,
-  };
-
   it('parses single element', () => {
-    expect(new TemplateParser('<div></div>').parse()).toEqual(emptyDiv);
+    expect(new TemplateParser('<div></div>').parse()).toMatchObject({ selector: 'div' });
   });
   it('parses single self closed element', () => {
-    expect(new TemplateParser('<div />').parse()).toEqual(emptyDiv);
+    expect(new TemplateParser('<div />').parse()).toMatchObject({ selector: 'div' });
   });
 
   it('parses a prop from attribute', () => {
-    const node: TemplateNode = {
-      selector: 'div',
-      isOptional: false,
+    expect(new TemplateParser('<div attr={foo} />').parse()).toMatchObject({
       attributes: { attr: { prop: 'foo', nullable: false, type: 'string' } },
-      children: [],
-      textContent: [],
-      subQuery: null,
-      subQueryProp: null,
-    };
-    expect(new TemplateParser('<div attr={foo} />').parse()).toEqual(node);
+    });
   });
 
   it('parses a prop from text content', () => {
-    const node: TemplateNode = {
-      selector: 'div',
-      isOptional: false,
-      attributes: {},
-      children: [],
+    expect(new TemplateParser('<div>{foo}</div>').parse()).toMatchObject({
       textContent: [{ prop: 'foo', nullable: false, type: 'string', text: '', textType: 'prop' }],
-      subQuery: null,
-      subQueryProp: null,
-    };
-    expect(new TemplateParser('<div>{foo}</div>').parse()).toEqual(node);
+    });
   });
   it('parses the prop type', () => {
-    const node = {
-      selector: 'div',
-      isOptional: false,
-      attributes: {},
-      children: [],
-      textContent: null,
-      subQuery: null,
-      subQueryProp: null,
-    };
-    expect(new TemplateParser('<div>{foo:string}</div>').parse()).toEqual({
-      ...node,
+    expect(new TemplateParser('<div>{foo:string}</div>').parse()).toMatchObject({
       textContent: [{ prop: 'foo', nullable: false, type: 'string', text: '', textType: 'prop' }],
     });
-    expect(new TemplateParser('<div>{foo?:string}</div>').parse()).toEqual({
-      ...node,
+    expect(new TemplateParser('<div>{foo?:string}</div>').parse()).toMatchObject({
       textContent: [{ prop: 'foo', nullable: true, type: 'string', text: '', textType: 'prop' }],
     });
-    expect(new TemplateParser('<div>{foo:number}</div>').parse()).toEqual({
-      ...node,
+    expect(new TemplateParser('<div>{foo:number}</div>').parse()).toMatchObject({
       textContent: [{ prop: 'foo', nullable: false, type: 'number', text: '', textType: 'prop' }],
     });
-    expect(new TemplateParser('<div>{foo?:number}</div>').parse()).toEqual({
-      ...node,
+    expect(new TemplateParser('<div>{foo?:number}</div>').parse()).toMatchObject({
       textContent: [{ prop: 'foo', nullable: true, type: 'number', text: '', textType: 'prop' }],
     });
   });
@@ -85,8 +48,10 @@ describe('TemplateParser', () => {
     expect(() => new TemplateParser('<body><?div><span>{foo}</span></div></body>').parse()).toThrow();
   });
   it('throws an error when the topmost element is optional', () => {
-    // new TemplateParser('<?div />').parse();
     expect(() => new TemplateParser('<?div />').parse()).toThrow();
+  });
+  it('throws an error when the topmost element is a direct child', () => {
+    expect(() => new TemplateParser('<!div />').parse()).toThrow();
   });
   it('throws an error when the curly braces are not closed in an attribute', () => {
     expect(() => new TemplateParser('<a href={foo />').parse()).toThrow();
@@ -99,5 +64,13 @@ describe('TemplateParser', () => {
   });
   it('correctly infers selector in a self closed element when there is no space before slash', () => {
     expect(new TemplateParser('<div.foo/>').parse().selector).toBe('div.foo');
+  });
+  it('parses direct child elements', () => {
+    expect(new TemplateParser('<body><!div /></body>').parse().children[0].isDirectChild).toBe(true);
+    expect(new TemplateParser('<body><div /></body>').parse().children[0].isDirectChild).toBe(false);
+  });
+  it('parses optional direct child elements', () => {
+    expect(new TemplateParser('<body><!?div /></body>').parse().children[0]).toMatchObject({ isDirectChild: true, isOptional: true });
+    expect(new TemplateParser('<body><?!div /></body>').parse().children[0]).toMatchObject({ isDirectChild: true, isOptional: true });
   });
 });

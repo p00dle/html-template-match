@@ -33,6 +33,11 @@ export class HtmlNode {
     }
   }
 
+  public satisfiesSelector(selector: string): boolean {
+    const selectors = parseSelector(selector);
+    return this.matchSelector(selectors[0]);
+  }
+
   public select(selector: string, matchItself = true): HtmlNode | null {
     const selectors = parseSelector(selector);
     const nodes: HtmlNode[] = [];
@@ -58,6 +63,10 @@ export class HtmlNode {
 
   public getParent(): HtmlNode | null {
     return this.parent === null ? null : this.allNodes[this.parent];
+  }
+
+  public getChildren(): HtmlNode[] {
+    return this.children.map((index) => this.allNodes[index]);
   }
 
   private _select(selectors: Selector[][], returnEarly: boolean, matchedNodes: HtmlNode[], depth: number): boolean {

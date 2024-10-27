@@ -159,6 +159,12 @@ describe('matchHtml', () => {
     const match = matchHtml('<div><span>{foo}</span><?section id={id?}><div>{text?}</</section></div>');
     expect(match('<div><span>foo</span></div>')).toEqual({ foo: 'foo', id: null, text: null });
   });
+  it('matches a direct child only when it is not deeply nested', () => {
+    const match = matchHtml('<div><!span>{foo}</span></div>');
+    expect(match('<div><span>foo</span></div>')).toEqual({ foo: 'foo' });
+    expect(match('<div><section><span>bar</span></section><span>foo</span></div>')).toEqual({ foo: 'foo' });
+    expect(() => match('<div><section><span>bar</span></section></div>')).toThrow();
+  });
 });
 
 describe('matchHtmlAll', () => {

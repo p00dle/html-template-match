@@ -77,12 +77,16 @@ function matchMany(
   depthSum: number,
 ): MatchMetadata[] {
   const matches: MatchMetadata[] = [];
-  for (const matchedNode of htmlNode.selectAll(templateNode.selector, matchItself).filter((node) => !allMatchNodes.has(node))) {
+  const matchedNodes = templateNode.isDirectChild
+    ? htmlNode.getChildren().filter((node) => node.satisfiesSelector(templateNode.selector))
+    : htmlNode.selectAll(templateNode.selector, matchItself);
+  for (const matchedNode of matchedNodes.filter((node) => !allMatchNodes.has(node))) {
     const output: Record<string, unknown> = {};
     const candidateMatchNodes = copyMap(allMatchNodes);
     const matchDepthSum = matchOne(matchedNode, templateNode, output, candidateMatchNodes, depthSum + matchedNode.depth);
     if (matchDepthSum !== -1) matches.push({ depthSum: matchDepthSum, output, allMatchedNodes: candidateMatchNodes, matchedNode });
   }
+
   return filterParents(matches);
 }
 
